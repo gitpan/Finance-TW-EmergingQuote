@@ -1,8 +1,9 @@
 package Finance::TW::EmergingQuote;
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 
 use strict;
 use LWP::Simple ();
+use Encode 'from_to';
 
 sub resolve {
     die "not implemented";
@@ -25,7 +26,10 @@ sub get {
     shift if $_[0] eq __PACKAGE__;
     my $stockno = $self ? $self->{id} : shift;
     my $content = LWP::Simple::get("http://ttn.otc.org.tw/main.htm");
+    from_to($content, 'big5', 'utf-8');
     my $result;
+
+    my ($time) = $content =~ m/製表時間 :.*?,([\d:]+)/;
 
     undef $self->{quote} if $self;
 
@@ -36,9 +40,10 @@ sub get {
 	my ($stock_no) = $entrybuf =~ m{"(\d+)"};
 	next unless $stock_no == $self->{id};
 
-	@{$result}{qw(id PAvg BidBuy BidBuyVol BidSell BidSellVol HighPrice LowPrice Avg MatchPrice DQty)} =
-	    map {s/,//g; $_} $entrybuf =~ m/>(?:&nbsp;\s*)?([\d,.-]+)</g;
+	@{$result}{qw(id name PAvg BidBuy BidBuyVol BidSell BidSellVol HighPrice LowPrice Avg MatchPrice DQty)} =
+	    map {s/,//g; $_} grep { $_ ne '&nbsp;' } $entrybuf =~ m/>(?:&nbsp;\s*)?([^<>]+)</g;
 	$result->{DQty} /= 1000;
+	$result->{time} = $time;
     }
 
     $self->{quote} = $result if $self;
