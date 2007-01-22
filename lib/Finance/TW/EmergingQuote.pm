@@ -1,5 +1,5 @@
 package Finance::TW::EmergingQuote;
-our $VERSION = '0.25';
+our $VERSION = '0.26';
 
 use strict;
 use LWP::Simple ();
@@ -25,7 +25,7 @@ sub get {
     my $self = shift if ref($_[0]) eq __PACKAGE__;
     shift if $_[0] eq __PACKAGE__;
     my $stockno = $self ? $self->{id} : shift;
-    my $content = LWP::Simple::get("http://ttn.otc.org.tw/main.htm");
+    my $content = LWP::Simple::get("http://nweb.otc.org.tw/main.htm");
     from_to($content, 'big5', 'utf-8');
     my $result;
 
